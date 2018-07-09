@@ -3,6 +3,7 @@
 
 #relevant imports
 import requests, json, time
+from Bio import Entrez
 from pandas.io.json import json_normalize
 import pandas as pd
 
@@ -105,3 +106,25 @@ pub_df = pd.concat([df_temp1,df_temp2,df_temp3,df_temp4], axis=1, sort=False)
 
 #save as a .pkl file
 pub_df.to_pickle('ArticleDetails.pkl')
+
+
+#Use SCOPUS API to retreive citations for each pubmed ID
+file_object = open('scopusapi.key', 'r')
+api_key = file_object.read()
+file_object.close()
+
+#create a dictionary to hold the citations
+citations = {}
+base_api = 'https://api.elsevier.com/content/search/scopus'
+for PMID in uid_df.index:
+    query_param = 'PMID(' + PMID + ')'
+    params = {
+        'apiKey': api_key,
+        'query': query_param,
+        'field': 'citedby-count'
+    }
+    response = requests.get(base_api, params=params)
+    response = json.loads(response.text)
+    if 'citedby-count' in response['search-results']['entry'][0].keys():
+        citations[PMID] = float(response['search-results']['entry'][0]['citedby-count'])
+    time.sleep(0.1)
