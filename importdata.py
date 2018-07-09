@@ -6,6 +6,7 @@ import requests, json, time
 from Bio import Entrez
 from pandas.io.json import json_normalize
 import pandas as pd
+import pickle
 
 #import healthgrades NYC data
 base_api = 'https://www.healthgrades.com/api3/usearch'
@@ -66,7 +67,9 @@ for name in df.head(1)['fullname']:
         pub_dict[name] = record['IdList']
         time.sleep(0.4)
         count+=1
-#
+#save as a .pkl file
+output = open('pubmeddict.pkl', 'wb')
+pickle.dump(publist, output)
 
 #make a big list of all pubmed IDs (PMID)
 #get article list and combine into big list
@@ -104,8 +107,6 @@ df_temp3 = pd.DataFrame.from_dict(journalyear,orient = 'index', columns = ['Jour
 df_temp4 = pd.DataFrame.from_dict(abstract,orient = 'index', columns = ['Abstract'])
 pub_df = pd.concat([df_temp1,df_temp2,df_temp3,df_temp4], axis=1, sort=False)
 
-#save as a .pkl file
-pub_df.to_pickle('ArticleDetails.pkl')
 
 
 #Use SCOPUS API to retreive citations for each pubmed ID
@@ -128,3 +129,9 @@ for PMID in uid_df.index:
     if 'citedby-count' in response['search-results']['entry'][0].keys():
         citations[PMID] = float(response['search-results']['entry'][0]['citedby-count'])
     time.sleep(0.1)
+
+df_temp1 = pd.DataFrame.from_dict(citations,orient = 'index')
+df_temp2 = df_temp1.rename(index=str, columns={0: "Citation Number"})
+pub_df = pd.concat([pub_df,df_temp2], axis=1)
+#save as a .pkl file
+pub_df.to_pickle('ArticleDetails.pkl')
