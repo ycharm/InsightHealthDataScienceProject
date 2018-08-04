@@ -50,14 +50,13 @@ for page in range(1, numPages + 1):
 df.to_pickle('Healthgradesdoctorlist.pkl')
 
 #add imports from Pubmed and Scopus
-#ccreate a dictionary containing pubmed IDs of all articles published by doctors
+#create a dictionary containing pubmed IDs of all articles published by doctors
 pub_dict = {}
 #read email address
 file_object = open('email.key', 'r')
 email = file_object.read()
 file_object.close()
 Entrez.email = file_object
-count = 0
 for name in df.head(1)['fullname']:
     if not name in publist.keys():
         searchterm = '(cancer[MeSH Terms]) AND ' + name + '[Author] '
@@ -66,7 +65,6 @@ for name in df.head(1)['fullname']:
         handle.close()
         pub_dict[name] = record['IdList']
         time.sleep(0.4)
-        count+=1
 #save as a .pkl file
 output = open('pubmeddict.pkl', 'wb')
 pickle.dump(publist, output)
@@ -84,8 +82,9 @@ record = Entrez.read(handle)
 handle.close()
 
 
-extract articletitle, journal title, year and abstract
-#Use dictionaries to be very careful
+#extract articletitle, journal title, year and abstract
+#Use dictionaries to be very careful about indexing,
+#make sure doctor name is the key
 articletitle = {}
 journaltitle = {}
 journalyear = {}
